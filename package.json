@@ -4,20 +4,11 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "start": "ts-node src/index.ts",
     "start:dev": "nodemon",
     "typeorm": "node --require ts-node/register ./node_modules/typeorm/cli.js",
     "migration:start": "yarn typeorm migration:run",
-    "migration:generate": "yarn typeorm migration:generate",
-    "build": "rm -rf ./dist && tsc"
-  },
-  "pkg": {
-    "scripts": "dist/**/*.js",
-    "assets": [
-      "dist/**/*"
-    ],
-    "targets": [
-      "node14"
-    ]
+    "migration:generate": "yarn typeorm migration:generate"
   },
   "dependencies": {
     "axios": "^0.21.0",

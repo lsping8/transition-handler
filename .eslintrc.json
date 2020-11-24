@@ -1,0 +1,24 @@
+{
+  "env": {
+    "node": true,
+    "es6": true
+  },
+  "extends": ["prettier"],
+  "globals": {
+    "Atomics": "readonly",
+    "SharedArrayBuffer": "readonly"
+  },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": 2018,
+    "sourceType": "module"
+  },
+  "plugins": ["prettier"],
+  "rules": {
+    "max-nested-callbacks": ["error", 4],
+    "prettier/prettier": "error"
+  }
+}

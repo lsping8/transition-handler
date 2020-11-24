@@ -6,8 +6,8 @@
   "password": "pandora",
   "database": "anime",
   "logging": true,
-  "synchronize": true,
-  "entities": ["src/resolvers/**/persistance/*.model.ts"],
+  "synchronize": false,
+  "entities": ["src/persistance/*.model.ts"],
   "migrations": ["src/migrations/*.ts"],
   "cli": {
     "migrationsDir": "src/migrations"

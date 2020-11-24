@@ -1,0 +1,15 @@
+{
+  "rss": {
+    "url": "http://subsplease.org/rss/?r=1080"
+  },
+  "transmission": {
+    "url": "http://localhost:9091/transmission/rpc",
+    "auth": {
+      "username": "kinsun",
+      "password": "pandora"
+    },
+    "download": {
+      "dir": "/downloads/complete"
+    }
+  }
+}

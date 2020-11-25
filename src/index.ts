@@ -6,10 +6,11 @@ import config from 'config';
 import Bluebird from 'bluebird';
 import path from 'path';
 import cron from 'node-cron';
+import http from 'http';
 
 import { Anime } from './persistance/Anime.model';
 
-import { IJson } from './interface';
+import { IAnimeData, IJson } from './interface';
 
 const startCronTask = async () => {
   await createConnection();
@@ -103,18 +104,44 @@ const addTorrent = async (animeName: string, filename: string) => {
   return await axios(options);
 };
 
-const test = async () => {
-  const test = await axios.get(
-    'https://subsplease.org/shows/maou-jou-de-oyasumi/'
-  );
-  const json = htmlParser.html2json(test.data);
+const startServer = async () => {
+  http
+    .createServer(async (req, res) => {
+      const response = await axios.get(
+        `https://subsplease.org/api/?f=show&tz=Asia/Kuala_Lumpur&sid=${req.url.replace(
+          '/',
+          ''
+        )}`
+      );
 
-  console.log('test', json);
+      const animeData = <IAnimeData[]>Object.values(response.data);
+
+      await Bluebird.map(
+        animeData,
+        async anime => {
+          await addTorrent(
+            anime.show,
+            anime.downloads[anime.downloads.length - 1].magnet
+          );
+        },
+        { concurrency: 1 }
+      );
+
+      await Anime.update(
+        { name: animeData[0].show },
+        { episode: parseInt(animeData[0].episode) }
+      );
+
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.write(`ok ${req.url}`);
+      res.end();
+    })
+    .listen(8081);
 };
 
 try {
   startCronTask();
-  // test();
+  startServer();
 } catch (err) {
   console.error('err', err);
 }

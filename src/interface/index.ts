@@ -19,3 +19,17 @@ interface IChannelItem {
   pubDate: string;
   'subsplease:size': string;
 }
+
+export interface IAnimeData {
+  time: string;
+  show: string;
+  episode: string;
+  downloads: IDownload[];
+}
+
+export interface IDownload {
+  res: string;
+  torrent: string;
+  magnet: string;
+  xdcc: string;
+}

@@ -37,9 +37,9 @@ const checkForDownload = async () => {
 
       if (addList.includes(animeName)) {
         const anime = await Anime.findOne({ name: animeName });
-        if (anime && anime.episode > animeEp) {
+        if (anime && animeEp > anime.episode) {
           addTorrent(animeName, item.link);
-          await Anime.update({ id: anime.id }, { episode: anime.episode });
+          await Anime.update({ id: anime.id }, { episode: animeEp });
         }
       }
     },

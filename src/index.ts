@@ -1,5 +1,6 @@
-import { createConnection } from 'typeorm';
+import { createConnection, Like } from 'typeorm';
 import parser from 'xml2json';
+import htmlParser from 'html2json';
 import axios, { AxiosRequestConfig } from 'axios';
 import config from 'config';
 import Bluebird from 'bluebird';
@@ -26,17 +27,23 @@ const checkForDownload = async () => {
     (acc: string[], curr) => acc.concat(curr.name),
     []
   );
+
   await Bluebird.map(
     json.rss.channel.item,
     async item => {
-      const name = item.title.replace('[SubsPlease] ', '');
-      const animeName = name.split(' - ')[0];
-      const animeEp = parseInt(
-        name.replace(`${animeName} - `, '').split(' ')[0]
+      const name = item.title
+        .replace('[SubsPlease] ', '')
+        .split(' (1080p) ')[0];
+      const splitTitle = name.split(' - ');
+
+      const animeEp = parseInt(splitTitle[splitTitle.length - 1]);
+      const animeName = name.replace(
+        ` - ${splitTitle[splitTitle.length - 1]}`,
+        ''
       );
 
       if (addList.includes(animeName)) {
-        const anime = await Anime.findOne({ name: animeName });
+        const anime = await Anime.findOne({ name: Like(`${animeName}%`) });
         if (anime && animeEp > anime.episode) {
           addTorrent(animeName, item.link);
           await Anime.update({ id: anime.id }, { episode: animeEp });
@@ -96,8 +103,18 @@ const addTorrent = async (animeName: string, filename: string) => {
   return await axios(options);
 };
 
+const test = async () => {
+  const test = await axios.get(
+    'https://subsplease.org/shows/maou-jou-de-oyasumi/'
+  );
+  const json = htmlParser.html2json(test.data);
+
+  console.log('test', json);
+};
+
 try {
   startCronTask();
+  // test();
 } catch (err) {
   console.error('err', err);
 }

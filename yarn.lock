@@ -1054,6 +1054,11 @@ hoek@^4.2.1:
   resolved "https://registry.yarnpkg.com/hoek/-/hoek-4.2.1.tgz#9634502aa12c445dd5a7c5734b572bb8738aacbb"
   integrity sha512-QLg82fGkfnJ/4iy1xZ81/9SIJiq1NGFUMGs6ParyjBZr6jW2Ufj/snDqTHixNlHdPNwN2RLVD0Pi3igeK9+JfA==
 
+html2json@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/html2json/-/html2json-1.0.2.tgz#c9d6d202fa65402386c202b345cf51bce80ed1ef"
+  integrity sha1-ydbSAvplQCOGwgKzRc9RvOgO0e8=
+
 http-cache-semantics@^4.0.0:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/http-cache-semantics/-/http-cache-semantics-4.1.0.tgz#49e91c5cbf36c9b94bcfcd71c23d5249ec74e390"

@@ -39,7 +39,7 @@ services:
       - 5433:5432
     restart: always
   anime-download:
-    image: anime-download:latest
+    image: lsping8/anime-download:latest
     network_mode: host
     container_name: anime-download
     depends_on:

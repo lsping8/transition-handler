@@ -17,10 +17,10 @@ export class Anime extends BaseEntity {
   @Index()
   name: string;
 
-  @Column()
+  @Column({ default: 0 })
   episode: number;
 
-  @Column()
+  @Column({ default: 0 })
   totalEpisode: number;
 
   @CreateDateColumn()

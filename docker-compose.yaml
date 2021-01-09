@@ -10,7 +10,8 @@ services:
       - VERSION=docker
     volumes:
       - /home/kinsun/config:/config
-      - /home/kinsun/media:/movies
+      - /home/kinsun/media:/movies/media
+      - /home/kinsun/Torrent:/movies/Torrent
     restart: always
   transmission:
     image: ghcr.io/linuxserver/transmission:amd64-latest
@@ -22,7 +23,7 @@ services:
       - PASS=pandora
     volumes:
       - /home/kinsun/config:/config
-      - /home/kinsun/media:/downloads
+      - /home/kinsun/Torrent:/downloads
     ports:
       - 9091:9091
       - 51413:51413

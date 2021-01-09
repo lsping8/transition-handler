@@ -12,6 +12,9 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Login Docker
+      env:
+        DOCKER_USER: ${{secrets.DOCKER_USER}}
+        DOCKER_PW: ${{secrets.DOCKER_PW}}
       run: docker login -u $DOCKER_USER -p $DOCKER_PW
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag anime-download:latest

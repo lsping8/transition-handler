@@ -33,3 +33,8 @@ export interface IDownload {
   magnet: string;
   xdcc: string;
 }
+
+export interface IConvertedJson {
+  episode: string[][];
+  magnets: [string];
+}

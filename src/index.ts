@@ -1,16 +1,20 @@
 import { createConnection, Like } from 'typeorm';
 import parser from 'xml2json';
-import htmlParser from 'html2json';
 import axios, { AxiosRequestConfig } from 'axios';
 import config from 'config';
 import Bluebird from 'bluebird';
 import path from 'path';
 import cron from 'node-cron';
-import http from 'http';
+import { createServer } from 'http';
+import convert from 'html-to-json-data';
+import { group, text, href } from 'html-to-json-data/definitions';
+import { startCase } from 'lodash';
+import express from 'express';
+import bodyParser from 'body-parser';
 
 import { Anime } from './persistance/Anime.model';
 
-import { IAnimeData, IJson } from './interface';
+import { IAnimeData, IConvertedJson, IJson } from './interface';
 
 const startCronTask = async () => {
   await createConnection();
@@ -37,7 +41,7 @@ const checkForDownload = async () => {
         .split(' (1080p) ')[0];
       const splitTitle = name.split(' - ');
 
-      const animeEp = parseInt(splitTitle[splitTitle.length - 1]);
+      const animeEp = parseInt(splitTitle[splitTitle.length - 1].slice(0, 2));
       const animeName = name.replace(
         ` - ${splitTitle[splitTitle.length - 1]}`,
         ''
@@ -104,39 +108,64 @@ const addTorrent = async (animeName: string, filename: string) => {
   return await axios(options);
 };
 
+const crawlNyaa = async (animeName: string) => {
+  console.log('startCase', startCase(animeName).replace(' ', '+'));
+  const response = await axios.get(
+    `https://nyaa.si/?f=0&c=0_0&q=subsplease+${startCase(animeName).replace(
+      ' ',
+      '+'
+    )}+1080`
+  );
+
+  const json: IConvertedJson = convert(response.data, {
+    episode: group('table tbody tr', text('td a', '')),
+    magnets: group(
+      'table tbody tr',
+      href('td.text-center a:last-child', 'magnet:?xt=urn:')
+    ),
+  });
+
+  return json.magnets.map((magnet, idx) => {
+    const text = json.episode[idx]
+      .reduce((acc, curr) => {
+        if (curr.includes('[SubsPlease]')) return curr;
+        return acc;
+      }, '')
+      .split(' - ');
+
+    return {
+      name: text[0].replace('[SubsPlease]', ''),
+      episode: text[text.length - 1].slice(0, 2),
+      magnet,
+    };
+  });
+};
+
 const startServer = async () => {
-  http
-    .createServer(async (req, res) => {
-      const response = await axios.get(
-        `https://subsplease.org/api/?f=show&tz=Asia/Kuala_Lumpur&sid=${req.url.replace(
-          '/',
-          ''
-        )}`
-      );
+  const app = express();
+  app.use(bodyParser.json());
+  app.post('/', async (req, res) => {
+    const nyaaResult = await crawlNyaa(req.body.name);
 
-      const animeData = <IAnimeData[]>Object.values(response.data);
+    await Bluebird.map(
+      nyaaResult,
+      async anime => {
+        await addTorrent(anime.name, anime.magnet);
+      },
+      { concurrency: 1 }
+    );
 
-      await Bluebird.map(
-        animeData,
-        async anime => {
-          await addTorrent(
-            anime.show,
-            anime.downloads[anime.downloads.length - 1].magnet
-          );
-        },
-        { concurrency: 1 }
-      );
+    await Anime.update(
+      { name: nyaaResult[0].name },
+      { episode: parseInt(nyaaResult[0].episode) }
+    );
 
-      await Anime.update(
-        { name: animeData[0].show },
-        { episode: parseInt(animeData[0].episode) }
-      );
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.write(`ok ${req.url}`);
+    res.end();
+  });
 
-      res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.write(`ok ${req.url}`);
-      res.end();
-    })
-    .listen(8081);
+  createServer(app).listen(8081);
 };
 
 try {

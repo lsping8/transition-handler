@@ -14,7 +14,7 @@ import bodyParser from 'body-parser';
 
 import { Anime } from './persistance/Anime.model';
 
-import { IAnimeData, IConvertedJson, IJson } from './interface';
+import { IConvertedJson, IJson } from './interface';
 
 const startCronTask = async () => {
   await createConnection();
@@ -108,10 +108,9 @@ const addTorrent = async (animeName: string, filename: string) => {
   return await axios(options);
 };
 
-const crawlNyaa = async (animeName: string) => {
-  console.log('startCase', startCase(animeName).replace(' ', '+'));
+const crawlNyaa = async (animeName: string, subName: string) => {
   const response = await axios.get(
-    `https://nyaa.si/?f=0&c=0_0&q=subsplease+${startCase(animeName).replace(
+    `https://nyaa.si/?f=0&c=0_0&q=${subName}+${startCase(animeName).replace(
       ' ',
       '+'
     )}+1080`
@@ -128,13 +127,13 @@ const crawlNyaa = async (animeName: string) => {
   return json.magnets.map((magnet, idx) => {
     const text = json.episode[idx]
       .reduce((acc, curr) => {
-        if (curr.includes('[SubsPlease]')) return curr;
+        if (curr.includes(`[${subName}]`)) return curr;
         return acc;
       }, '')
       .split(' - ');
 
     return {
-      name: text[0].replace('[SubsPlease]', ''),
+      name: text[0].replace(`[${subName}]`, ''),
       episode: text[text.length - 1].slice(0, 2),
       magnet,
     };
@@ -145,7 +144,7 @@ const startServer = async () => {
   const app = express();
   app.use(bodyParser.json());
   app.post('/', async (req, res) => {
-    const nyaaResult = await crawlNyaa(req.body.name);
+    const nyaaResult = await crawlNyaa(req.body.name, req.body.subName);
 
     await Bluebird.map(
       nyaaResult,

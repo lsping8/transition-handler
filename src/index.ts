@@ -40,8 +40,7 @@ const checkForDownload = async () => {
         .replace('[SubsPlease] ', '')
         .split(' (1080p) ')[0];
       const splitTitle = name.split(' - ');
-
-      const animeEp = parseInt(splitTitle[splitTitle.length - 1].slice(0, 2));
+      const animeEp = parseInt(splitTitle[splitTitle.length - 1]);
       const animeName = name.replace(
         ` - ${splitTitle[splitTitle.length - 1]}`,
         ''

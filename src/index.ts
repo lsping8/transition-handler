@@ -109,12 +109,15 @@ const addTorrent = async (animeName: string, filename: string) => {
 };
 
 const crawlNyaa = async (animeName: string, subName: string) => {
-  const response = await axios.get(
-    `https://nyaa.si/?f=0&c=0_0&q=${subName}+${startCase(animeName).replace(
-      ' ',
-      '+'
-    )}+1080`
-  );
+  const response = await axios.get(`https://nyaa.si`, {
+    params: {
+      f: '0',
+      c: '0_0',
+      q: `${subName}+${startCase(animeName).replace(' ', '+')}+1080`,
+    },
+  });
+
+  console.log('response', response.data);
 
   const json: IConvertedJson = convert(response.data, {
     episode: group('table tbody tr', text('td a', '')),
@@ -123,6 +126,8 @@ const crawlNyaa = async (animeName: string, subName: string) => {
       href('td.text-center a:last-child', 'magnet:?xt=urn:')
     ),
   });
+
+  console.log('json', json);
 
   return json.magnets.map((magnet, idx) => {
     const text = json.episode[idx]

@@ -116,8 +116,6 @@ const crawlNyaa = async (animeName: string, subName: string) => {
     },
   });
 
-  console.log('response', response.data);
-
   const json: IConvertedJson = convert(response.data, {
     episode: group('table tbody tr', text('td a', '')),
     magnets: group(
@@ -125,8 +123,6 @@ const crawlNyaa = async (animeName: string, subName: string) => {
       href('td.text-center a:last-child', 'magnet:?xt=urn:')
     ),
   });
-
-  console.log('json', json);
 
   return json.magnets.map((magnet, idx) => {
     const text = json.episode[idx]
@@ -147,6 +143,13 @@ const crawlNyaa = async (animeName: string, subName: string) => {
 const startServer = async () => {
   const app = express();
   app.use(bodyParser.json());
+  app.get('/', async (req, res) => {
+    await checkForDownload();
+
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.write(`ok ${req.url}`);
+    res.end();
+  });
   app.post('/', async (req, res) => {
     const nyaaResult = await crawlNyaa(req.body.name, req.body.subName);
 

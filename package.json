@@ -14,7 +14,6 @@
   "dependencies": {
     "axios": "^0.21.0",
     "bluebird": "^3.7.2",
-    "body-parser": "^1.19.0",
     "config": "^3.3.2",
     "express": "^4.17.1",
     "html-to-json-data": "^1.6.0",

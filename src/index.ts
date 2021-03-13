@@ -8,16 +8,15 @@ import cron from 'node-cron';
 import { createServer } from 'http';
 import convert from 'html-to-json-data';
 import { group, text, href } from 'html-to-json-data/definitions';
-import { startCase } from 'lodash';
 import express from 'express';
-import bodyParser from 'body-parser';
 
 import { Anime } from './persistance/Anime.model';
 
 import { IConvertedJson, IJson } from './interface';
 
 const startCronTask = async () => {
-  await createConnection();
+  const connection = await createConnection();
+  await connection.runMigrations({ transaction: 'all' });
   await checkForDownload();
   cron.schedule('0 0 */1 * * *', async () => {
     await checkForDownload();
@@ -50,6 +49,7 @@ const checkForDownload = async () => {
         const anime = await Anime.findOne({ name: Like(`${animeName}%`) });
         if (anime && animeEp > anime.episode) {
           addTorrent(animeName, item.link);
+          console.log(`--- Adding ${animeName} - ${animeEp} ---`);
           await Anime.update({ id: anime.id }, { episode: animeEp });
         }
       }
@@ -103,7 +103,6 @@ const addTorrent = async (animeName: string, filename: string) => {
     },
     url: config.get('transmission.url'),
   };
-
   return await axios(options);
 };
 
@@ -112,12 +111,12 @@ const crawlNyaa = async (animeName: string, subName: string) => {
     params: {
       f: '0',
       c: '0_0',
-      q: `${subName}+${startCase(animeName).replace(' ', '+')}+1080`,
+      q: `${subName}+${animeName.replace(' ', '+')}+1080`,
     },
   });
 
   const json: IConvertedJson = convert(response.data, {
-    episode: group('table tbody tr', text('td a', '')),
+    name: group('table tbody tr', text('td a', '')),
     magnets: group(
       'table tbody tr',
       href('td.text-center a:last-child', 'magnet:?xt=urn:')
@@ -125,15 +124,18 @@ const crawlNyaa = async (animeName: string, subName: string) => {
   });
 
   return json.magnets.map((magnet, idx) => {
-    const text = json.episode[idx]
+    const text = json.name[idx]
       .reduce((acc, curr) => {
-        if (curr.includes(`[${subName}]`)) return curr;
+        if (curr.toLowerCase().includes(`[${subName.toLowerCase()}]`))
+          return curr;
         return acc;
       }, '')
       .split(' - ');
 
+    const animeName = text[0].split(' ').slice(1).join(' ');
+
     return {
-      name: text[0].replace(`[${subName}]`, ''),
+      name: animeName,
       episode: text[text.length - 1].slice(0, 2),
       magnet,
     };
@@ -142,7 +144,7 @@ const crawlNyaa = async (animeName: string, subName: string) => {
 
 const startServer = async () => {
   const app = express();
-  app.use(bodyParser.json());
+  app.use(express.json());
   app.get('/', async (req, res) => {
     await checkForDownload();
 
@@ -152,11 +154,26 @@ const startServer = async () => {
   });
   app.post('/', async (req, res) => {
     const nyaaResult = await crawlNyaa(req.body.name, req.body.subName);
-
     await Bluebird.map(
       nyaaResult,
       async anime => {
+        console.log(`--- Adding ${anime.name} - ${anime.episode} ---`);
         await addTorrent(anime.name, anime.magnet);
+        const animeQuery = await Anime.findOne({
+          name: Like(`${anime.name}%`),
+        });
+        if (!animeQuery) {
+          await Anime.create({
+            name: anime.name,
+            episode: parseInt(anime.episode),
+            totalEpisode: 0,
+          }).save();
+        } else {
+          await Anime.update(
+            { id: animeQuery.id },
+            { episode: parseInt(anime.episode) }
+          );
+        }
       },
       { concurrency: 1 }
     );
@@ -177,6 +194,7 @@ const startServer = async () => {
 try {
   startCronTask();
   startServer();
+  console.log('Server is ready!');
 } catch (err) {
   console.error('err', err);
 }

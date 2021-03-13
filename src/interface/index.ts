@@ -35,6 +35,6 @@ export interface IDownload {
 }
 
 export interface IConvertedJson {
-  episode: string[][];
+  name: string[][];
   magnets: [string];
 }

@@ -5,7 +5,7 @@
   "username": "postgres",
   "password": "pandora",
   "database": "anime",
-  "logging": true,
+  "logging": false,
   "synchronize": false,
   "entities": ["src/persistance/*.model.ts"],
   "migrations": ["src/migrations/*.ts"],

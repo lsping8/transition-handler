@@ -1,4 +1,4 @@
-import { createConnection, Like } from 'typeorm';
+import { createConnection, ILike, Like } from 'typeorm';
 import parser from 'xml2json';
 import axios, { AxiosRequestConfig } from 'axios';
 import config from 'config';
@@ -13,6 +13,7 @@ import express from 'express';
 import { Anime } from './persistance/Anime.model';
 
 import { IConvertedJson, IJson } from './interface';
+import { lowerCase } from 'lodash';
 
 const startCronTask = async () => {
   const connection = await createConnection();
@@ -45,8 +46,10 @@ const checkForDownload = async () => {
         ''
       );
 
-      if (addList.includes(animeName)) {
-        const anime = await Anime.findOne({ name: Like(`${animeName}%`) });
+      if (addList.some(name => lowerCase(name) === lowerCase(animeName))) {
+        const anime = await Anime.findOne({
+          name: ILike(`${animeName.split('-')[0]}%`),
+        });
         if (anime && animeEp > anime.episode) {
           addTorrent(animeName, item.link);
           console.log(`--- Adding ${animeName} - ${animeEp} ---`);
@@ -166,7 +169,6 @@ const startServer = async () => {
           await Anime.create({
             name: anime.name,
             episode: parseInt(anime.episode),
-            totalEpisode: 0,
           }).save();
         } else {
           await Anime.update(

@@ -13,15 +13,12 @@ export class Anime extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ unique: true })
   @Index()
   name: string;
 
   @Column({ default: 0 })
   episode: number;
-
-  @Column({ default: 0 })
-  totalEpisode: number;
 
   @CreateDateColumn()
   createdAt: Date;

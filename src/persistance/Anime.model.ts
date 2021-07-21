@@ -20,6 +20,9 @@ export class Anime extends BaseEntity {
   @Column({ default: 0 })
   episode: number;
 
+  @Column({ default: 1 })
+  season: number;
+
   @CreateDateColumn()
   createdAt: Date;
 

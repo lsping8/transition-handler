@@ -51,7 +51,7 @@ const checkForDownload = async () => {
           name: ILike(`${animeName.split('-')[0]}%`),
         });
         if (anime && animeEp > anime.episode) {
-          addTorrent(animeName, item.link);
+          addTorrent(animeName, item.link, anime.season);
           console.log(`--- Adding ${animeName} - ${animeEp} ---`);
           await Anime.update({ id: anime.id }, { episode: animeEp });
         }
@@ -84,7 +84,11 @@ const getSessionId = async () => {
   });
 };
 
-const addTorrent = async (animeName: string, filename: string) => {
+const addTorrent = async (
+  animeName: string,
+  filename: string,
+  season: number
+) => {
   const transmissionSessionId = await getSessionId();
   const options: AxiosRequestConfig = {
     method: 'POST',
@@ -97,7 +101,7 @@ const addTorrent = async (animeName: string, filename: string) => {
       arguments: {
         'download-dir': path.join(
           config.get('transmission.download.dir'),
-          animeName
+          `${animeName}/Season ${season}/`
         ),
         filename: filename,
         paused: false,
@@ -109,7 +113,11 @@ const addTorrent = async (animeName: string, filename: string) => {
   return await axios(options);
 };
 
-const crawlNyaa = async (animeName: string, subName: string) => {
+const crawlNyaa = async (
+  animeName: string,
+  subName: string,
+  season: number
+) => {
   const response = await axios.get(`https://nyaa.si`, {
     params: {
       f: '0',
@@ -141,6 +149,7 @@ const crawlNyaa = async (animeName: string, subName: string) => {
       name: animeName,
       episode: text[text.length - 1].slice(0, 2),
       magnet,
+      season,
     };
   });
 };
@@ -156,12 +165,16 @@ const startServer = async () => {
     res.end();
   });
   app.post('/', async (req, res) => {
-    const nyaaResult = await crawlNyaa(req.body.name, req.body.subName);
+    const nyaaResult = await crawlNyaa(
+      req.body.name,
+      req.body.subName,
+      req.body.season
+    );
     await Bluebird.map(
       nyaaResult,
       async anime => {
         console.log(`--- Adding ${anime.name} - ${anime.episode} ---`);
-        await addTorrent(anime.name, anime.magnet);
+        await addTorrent(anime.name, anime.magnet, anime.season);
         const animeQuery = await Anime.findOne({
           name: Like(`${anime.name}%`),
         });

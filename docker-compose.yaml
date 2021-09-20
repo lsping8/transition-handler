@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   plex:
-    image: ghcr.io/linuxserver/plex:amd64-latest
+    image: linuxserver/plex:amd64-latest
     container_name: plex
     network_mode: host
     environment:
@@ -14,7 +14,7 @@ services:
       - /home/kinsun/media/Torrent:/movies/Torrent
     restart: always
   transmission:
-    image: ghcr.io/linuxserver/transmission:amd64-latest
+    image: linuxserver/transmission:amd64-latest
     container_name: transmission
     environment:
       - PUID=1000

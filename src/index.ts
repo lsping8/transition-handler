@@ -46,9 +46,11 @@ const checkForDownload = async () => {
         ''
       );
 
-      if (addList.some(name => lowerCase(name) === lowerCase(animeName))) {
+      if (
+        addList.some(name => lowerCase(animeName).includes(lowerCase(name)))
+      ) {
         const anime = await Anime.findOne({
-          name: ILike(`${animeName.split('-')[0]}%`),
+          name: ILike(`${animeName.split(' - ')[0]}%`),
         });
         if (anime && animeEp > anime.episode) {
           addTorrent(animeName, item.link, anime.season);

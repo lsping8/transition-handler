@@ -1,34 +1,37 @@
 version: '3.8'
+networks:
+  my-network:
+    driver: bridge
 services:
-  plex:
-    image: linuxserver/plex:amd64-latest
-    container_name: plex
-    network_mode: host
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - VERSION=docker
-    volumes:
-      - /home/kinsun/config:/config
-      - /home/kinsun/Backup:/movies/media
-      - /home/kinsun/media/Torrent:/movies/Torrent
-    restart: always
-  transmission:
-    image: linuxserver/transmission:amd64-latest
-    container_name: transmission
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - USER=kinsun
-      - PASS=pandora
-    volumes:
-      - /home/kinsun/config:/config
-      - /home/kinsun/media/Torrent:/downloads
-    ports:
-      - 9091:9091
-      - 51413:51413
-      - 51413:51413/udp
-    restart: always
+  # plex:
+  #   image: linuxserver/plex:amd64-latest
+  #   container_name: plex
+  #   network_mode: host
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - VERSION=docker
+  #   volumes:
+  #     - /home/kinsun/config:/config
+  #     - /home/kinsun/Backup:/movies/media
+  #     - /home/kinsun/media/Torrent:/movies/Torrent
+  #   restart: always
+  # transmission:
+  #   image: linuxserver/transmission:amd64-latest
+  #   container_name: transmission
+  #   environment:
+  #     - PUID=1000
+  #     - PGID=1000
+  #     - USER=kinsun
+  #     - PASS=pandora
+  #   volumes:
+  #     - /home/kinsun/config:/config
+  #     - /home/kinsun/media/Torrent:/downloads
+  #   ports:
+  #     - 9091:9091
+  #     - 51413:51413
+  #     - 51413:51413/udp
+  #   restart: always
   postgres:
     image: postgres:latest
     container_name: postgres
@@ -37,11 +40,16 @@ services:
       - POSTGRES_DB=anime
     ports:
       - 5433:5432
+    networks:
+      - my-network
     restart: always
   anime-download:
     image: lsping8/anime-download:latest
-    network_mode: host
     container_name: anime-download
     depends_on:
       - postgres
+    ports:
+      - 8081:8081
+    networks:
+      - my-network
     restart: always

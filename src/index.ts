@@ -103,7 +103,7 @@ const addTorrent = async (
       arguments: {
         'download-dir': path.join(
           config.get('transmission.download.dir'),
-          `${animeName}/Season ${season}/`
+          `${animeName}\\Season ${season}\\`
         ),
         filename: filename,
         paused: false,

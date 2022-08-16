@@ -9,7 +9,7 @@
       "password": "pandora"
     },
     "download": {
-      "dir": "/downloads/complete"
+      "dir": "D:\\Download\\"
     }
   }
 }
